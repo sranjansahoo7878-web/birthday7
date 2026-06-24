@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Birthday! 🎂</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            background: #0d0b1a;
+            user-select: none;
+        }
+
+        /* ===== PAGE CONTAINERS ===== */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.9s cubic-bezier(0.68, -0.55, 0.27, 1.55),
+                        opacity 0.9s ease;
+        }
+        .page.hidden {
+            transform: scale(0.7) rotateY(15deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .page.active {
+            transform: scale(1) rotateY(0deg);
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        /* ========================================
+                   PAGE 1 — BIRTHDAY GREETING + DRAGGABLE GIFT
+                ======================================== */
+        #page1 {
+            background: linear-gradient(145deg, #0d0b1a 0%, #1a1035 30%, #2a1550 60%, #1a0c30 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stars-container {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .star {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #fff;
+            border-radius: 50%;
+            animation: twinkle var(--dur) ease-in-out infinite alternate;
+            box-shadow: 0 0 6px 2px rgba(255, 215, 100, 0.4);
+        }
+        @keyframes twinkle {
+            0% { opacity: 0.1; transform: scale(0.5); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        .float-elements {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .float-item {
+            position: absolute;
+            font-size: 28px;
+            animation: floatUp linear infinite;
+            opacity: 0.6;
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(105vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-10vh) rotate(720deg); opacity: 0; }
+        }
+
+        .page1-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .birthday-title {
+            font-size: 3.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffd700, #ffaa00, #ff6b35);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: 3px;
+            margin-bottom: 6px;
+            line-height: 1.2;
+        }
+        .birthday-sub {
+            color: #c8b8e8;
+            font-size: 1.1rem;
+            letter-spacing: 6px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+        .friend-name {
+            font-size: 2rem;
+            color: #fff;
+            font-weight: 600;
+            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(255, 200, 80, 0.3);
+            margin-bottom: 25px;
+        }
+        .friend-name span {
+            background: linear-gradient(135deg, #ffd700, #ff8a5c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page1-instruction {
+            color: #a990d0;
+            font-size: 1rem;
+            letter-spacing: 2px;
+            margin-top: 10px;
+            animation: pulseText 2s ease-in-out infinite;
+        }
+        @keyframes pulseText {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* ===== DRAGGABLE GIFT BOX ===== */
+        .gift-box {
+            position: relative;
+            z-index: 20;
+            width: 130px;
+            height: 130px;
+            cursor: grab;
+            touch-action: none;
+            margin: 15px 0;
+        }
+        .gift-box:active {
+            cursor: grabbing;
+        }
+        .gift-box svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+            filter: drop-shadow(0 0 30px rgba(255, 180, 50, 0.4));
+            animation: giftPulse 2.5s ease-in-out infinite;
+        }
+        @keyframes giftPulse {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(-3deg); }
+            75% { transform: scale(1.05) rotate(3deg); }
+        }
+
+        .drop-zone {
+            position: absolute;
+            bottom: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            border: 2px dashed rgba(255, 200, 100, 0.25);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 200, 100, 0.3);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            transition: all 0.4s;
+            z-index: 5;
+            text-align: center;
+            padding: 15px;
+            backdrop-filter: blur(2px);
+        }
+        .drop-zone.hover {
+            border-color: rgba(255, 200, 80, 0.8);
+            background: rgba(255, 200, 80, 0.08);
+            box-shadow: 0 0 50px rgba(255, 200, 80, 0.15);
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        /* ========================================
+                   PAGE 2 — PERSON PHOTOS + MESSAGE + NEXT BUTTON
+                ======================================== */
+        #page2 {
+            background: linear-gradient(160deg, #0f0c1f 0%, #1a1235 30%, #0e0a1a 100%);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .page2-content {
+            max-width: 520px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 15px 0;
+        }
+
+        .page2-title {
+            font-size: 1.4rem;
+            color: #e0d0f0;
+            font-weight: 300;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+        .page2-title span {
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffd700, #ff8a5c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* ===== PHOTO GALLERY — PERSON PHOTOS ===== */
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+        }
+        .photo-item {
+            aspect-ratio: 1 / 1;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 200, 100, 0.15);
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            background: #1a1235;
+        }
+        .photo-item:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(255, 200, 80, 0.2);
+            border-color: rgba(255, 200, 100, 0.45);
+        }
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: 18px;
+        }
+
+        /* Optional caption overlay on hover */
+        .photo-item .caption {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 10px 12px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+            color: #fff;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-align: center;
+        }
+        .photo-item:hover .caption {
+            opacity: 1;
+        }
+
+        /* ===== SPECIAL BIRTHDAY MESSAGE ===== */
+        .special-message {
+            background: linear-gradient(135deg, rgba(255, 200, 100, 0.06), rgba(200, 150, 255, 0.05));
+            border: 1px solid rgba(255, 200, 100, 0.15);
+            border-radius: 20px;
+            padding: 25px 30px;
+            width: 100%;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+        .special-message .label {
+            color: #c8a8e8;
+            font-size: 0.8rem;
+            letter-spacing: 5px;
+            font-weight: 300;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+        .special-message p {
+            color: #f0e8ff;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            font-weight: 300;
+        }
+        .special-message p strong {
+            color: #ffd700;
+            font-weight: 600;
+        }
+        .special-message .signature {
+            margin-top: 12px;
+            color: #c8a8e8;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            font-style: italic;
+        }
+        .special-message .emoji-row {
+            margin-top: 10px;
+            font-size: 1.4rem;
+            letter-spacing: 10px;
+        }
+
+        /* ===== NEXT BUTTON ===== */
+        .btn-next {
+            background: linear-gradient(135deg, #ff8a5c, #e06535);
+            color: #fff;
+            border: none;
+            padding: 16px 50px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            font-weight: 600;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 25px rgba(255, 138, 92, 0.25);
+            width: 100%;
+            max-width: 300px;
+        }
+        .btn-next:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 35px rgba(255, 138, 92, 0.4);
+            background: linear-gradient(135deg, #ff9a6c, #f07040);
+        }
+        .btn-next:active {
+            transform: translateY(0);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 480px) {
+            .birthday-title { font-size: 2.2rem; }
+            .friend-name { font-size: 1.4rem; }
+            .gift-box { width: 100px; height: 100px; }
+            .drop-zone { width: 120px; height: 120px; font-size: 0.7rem; bottom: 10%; }
+            .page2-title { font-size: 1.1rem; }
+            .photo-gallery { gap: 8px; }
+            .special-message p { font-size: 1rem; }
+            .btn-next { padding: 14px 38px; font-size: 1rem; max-width: 260px; }
+        }
+        @media (max-height: 700px) {
+            #page2 { justify-content: flex-start; }
+            .page2-content { gap: 14px; }
+            .photo-gallery { gap: 8px; }
+            .special-message { padding: 16px 20px; }
+            .special-message p { font-size: 0.95rem; line-height: 1.6; }
+            
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================
+    PAGE 1 — BIRTHDAY GREETING + DRAGGABLE GIFT BOX
+    ============================================ -->
+    <div id="page1" class="page active">
+
+        <div class="stars-container" id="starsContainer"></div>
+        <div class="float-elements" id="floatElements"></div>
+
+        <div class="page1-content">
+            <div class="birthday-sub">🎉 HAPPY BIRTHDAY 🎉</div>
+            <div class="birthday-title">Birthday Mode</div>
+            <div class="friend-name">
+                <span id="friendNameDisplay">Dear Friend</span> 👋
+            </div>
+        </div>
+
+        <div class="gift-box" id="giftBox" draggable="true">
+            <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="boxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff6b35"/>
+                        <stop offset="50%" stop-color="#e04520"/>
+                        <stop offset="100%" stop-color="#c03015"/>
+                    </linearGradient>
+                    <linearGradient id="ribbonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffd700"/>
+                        <stop offset="100%" stop-color="#ffaa00"/>
+                    </linearGradient>
+                    <linearGradient id="lidGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ff7a45"/>
+                        <stop offset="100%" stop-color="#d43a18"/>
+                    </linearGradient>
+                    <filter id="boxShadow">
+                        <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#ff6b35" flood-opacity="0.3"/>
+                    </filter>
+                </defs>
+                <rect x="18" y="20" width="84" height="18" rx="4" fill="url(#lidGrad)" filter="url(#boxShadow)"/>
+                <rect x="15" y="36" width="90" height="64" rx="6" fill="url(#boxGrad)" filter="url(#boxShadow)"/>
+                <rect x="55" y="36" width="10" height="64" fill="url(#ribbonGrad)"/>
+                <rect x="15" y="60" width="90" height="10" fill="url(#ribbonGrad)"/>
+                <ellipse cx="48" cy="26" rx="14" ry="10" fill="url(#ribbonGrad)" transform="rotate(-20 48 26)"/>
+                <ellipse cx="72" cy="26" rx="14" ry="10" fill="url(#ribbonGrad)" transform="rotate(20 72 26)"/>
+                <circle cx="60" cy="26" r="8" fill="#ffcc00"/>
+                <text x="35" y="34" font-size="8" fill="rgba(255,255,255,0.4)">✦</text>
+                <text x="78" y="34" font-size="6" fill="rgba(255,255,255,0.3)">✦</text>
+            </svg>
+        </div>
+
+        <div class="page1-instruction">🎁 Drag the gift to the circle →</div>
+
+        <div class="drop-zone" id="dropZone">
+            Drop your<br>gift here 🎂
+        </div>
+    </div>
+
+    <!-- ============================================
+    PAGE 2 — PERSON PHOTOS + MESSAGE + NEXT BUTTON
+    ============================================ -->
+    <div id="page2" class="page hidden">
+        <div class="page2-content">
+
+            <div class="page2-title">📸 <span>Moments</span> With You 📸</div>
+
+            <!-- ===== PHOTO GALLERY — 4 PERSON PHOTOS ===== -->
+            <!-- 👇 REPLACE THE src PATHS WITH YOUR PHOTOS OF THE PERSON -->
+            <div class="photo-gallery">
+                <div class="photo-item">
+                    <img src="photo 1.png" alt="Photo 1" />
+                    <div class="caption">🌟 Shining bright</div>
+                </div>
+                <div class="photo-item">
+                    <img src="pohoto3.png" alt="Photo 2" />
+                    <div class="caption">😊 That smile</div>
+                </div>
+                <div class="photo-item">
+                    <img src="image.3.png" alt="Photo 3" />
+                    <div class="caption">✨ Simply amazing</div>
+                </div>
+                <div class="photo-item">
+                    <img src="photo 2.png" alt="Photo 4" />
+                    <div class="caption">🎂 Birthday mood</div>
+                </div>
+            </div>
+
+            <!-- ===== SPECIAL BIRTHDAY MESSAGE ===== -->
+            <div class="special-message">
+                <div class="label">★ To Someone Incredible ★</div>
+                <p>
+                    <strong>Happy Birthday!</strong> 🎉<br>
+                    wishing you a beautiful day and even.<br>
+                    more beautiful year ahead may all your —<br>
+                    big goals and dreams come closer to reality this year Happy birthday Dear".<br>
+                    Today you birthday dear so Celebrate your grate day ś  <strong>dear friend</strong>! 🥳
+                </p>
+                <div class="signature">— With all my heart,friend</div>
+                <div class="emoji-row">🎂 🎈 🎉 🎁 💫</div>
+            </div>
+
+            <!-- ===== NEXT BUTTON ===== -->
+            <button class="btn-next" id="btnNext">🎉 Celebrate! 🎉</button>
+                 <a href="inde3x.html"style="background-color:pink;
+                 color:white:padding:10px20px;text-decoration:none;border-radius:5px; disply:inline-block;"\>next</a\>\
+        
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // 0. CUSTOMIZE YOUR FRIEND'S NAME HERE!
+        // =============================================
+        const FRIEND_NAME = "swasati.";  // <-- CHANGE THIS
+
+        document.getElementById('friendNameDisplay').textContent = FRIEND_NAME;
+
+        // =============================================
+        // 1. GENERATE STARS
+        // =============================================
+        (function generateStars() {
+            const container = document.getElementById('starsContainer');
+            for (let i = 0; i < 80; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.left = Math.random() * 100 + '%';
+                star.style.top = Math.random() * 100 + '%';
+                star.style.setProperty('--dur', (1.5 + Math.random() * 3) + 's');
+                star.style.animationDelay = (Math.random() * 4) + 's';
+                star.style.width = (2 + Math.random() * 3) + 'px';
+                star.style.height = star.style.width;
+                container.appendChild(star);
+            }
+        })();
+
+        // =============================================
+        // 2. GENERATE FLOATING BALLOONS / CONFETTI
+        // =============================================
+        (function generateFloats() {
+            const container = document.getElementById('floatElements');
+            const symbols = ['🎈', '🎉', '🎊', '✨', '⭐', '🎂', '🎁', '🥳'];
+            for (let i = 0; i < 20; i++) {
+                const el = document.createElement('div');
+                el.className = 'float-item';
+                el.textContent = symbols[i % symbols.length];
+                el.style.left = Math.random() * 100 + '%';
+                el.style.fontSize = (20 + Math.random() * 20) + 'px';
+                el.style.animationDuration = (14 + Math.random() * 18) + 's';
+                el.style.animationDelay = (Math.random() * 12) + 's';
+                container.appendChild(el);
+            }
+        })();
+
+        // =============================================
+        // 3. DRAG & DROP — PAGE 1 → PAGE 2
+        // =============================================
+        const gift = document.getElementById('giftBox');
+        const dropZone = document.getElementById('dropZone');
+        const page1 = document.getElementById('page1');
+        const page2 = document.getElementById('page2');
+
+        let isDragging = false;
+        let offsetX = 0, offsetY = 0;
+        let giftOriginalParent = gift.parentNode;
+
+        // Mouse Events
+        gift.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            const rect = gift.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            gift.style.position = 'fixed';
+            gift.style.left = (e.clientX - offsetX) + 'px';
+            gift.style.top = (e.clientY - offsetY) + 'px';
+            gift.style.zIndex = '1000';
+            gift.style.transition = 'none';
+            gift.style.cursor = 'grabbing';
+            gift.style.animation = 'none';
+            document.body.appendChild(gift);
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            gift.style.left = (e.clientX - offsetX) + 'px';
+            gift.style.top = (e.clientY - offsetY) + 'px';
+
+            const z = dropZone.getBoundingClientRect();
+            const gx = e.clientX, gy = e.clientY;
+            if (gx >= z.left && gx <= z.right && gy >= z.top && gy <= z.bottom) {
+                dropZone.classList.add('hover');
+            } else {
+                dropZone.classList.remove('hover');
+            }
+        });
+
+        document.addEventListener('mouseup', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            gift.style.cursor = 'grab';
+
+            const z = dropZone.getBoundingClientRect();
+            const gx = e.clientX, gy = e.clientY;
+
+            if (gx >= z.left && gx <= z.right && gy >= z.top && gy <= z.bottom) {
+                openPage2();
+            } else {
+                gift.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+                gift.style.position = 'relative';
+                gift.style.left = '0';
+                gift.style.top = '0';
+                gift.style.zIndex = '20';
+                gift.style.cursor = 'grab';
+                gift.style.animation = 'giftPulse 2.5s ease-in-out infinite';
+                giftOriginalParent.appendChild(gift);
+            }
+            dropZone.classList.remove('hover');
+        });
+
+        // Touch Events
+        gift.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            isDragging = true;
+            const rect = gift.getBoundingClientRect();
+            offsetX = touch.clientX - rect.left;
+            offsetY = touch.clientY - rect.top;
+            gift.style.position = 'fixed';
+            gift.style.left = (touch.clientX - offsetX) + 'px';
+            gift.style.top = (touch.clientY - offsetY) + 'px';
+            gift.style.zIndex = '1000';
+            gift.style.transition = 'none';
+            gift.style.animation = 'none';
+            document.body.appendChild(gift);
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            gift.style.left = (touch.clientX - offsetX) + 'px';
+            gift.style.top = (touch.clientY - offsetY) + 'px';
+
+            const z = dropZone.getBoundingClientRect();
+            const gx = touch.clientX, gy = touch.clientY;
+            if (gx >= z.left && gx <= z.right && gy >= z.top && gy <= z.bottom) {
+                dropZone.classList.add('hover');
+            } else {
+                dropZone.classList.remove('hover');
+            }
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('touchend', (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+            const touch = e.changedTouches[0];
+            const z = dropZone.getBoundingClientRect();
+            const gx = touch.clientX, gy = touch.clientY;
+
+            if (gx >= z.left && gx <= z.right && gy >= z.top && gy <= z.bottom) {
+                openPage2();
+            } else {
+                gift.style.transition = 'all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+                gift.style.position = 'relative';
+                gift.style.left = '0';
+                gift.style.top = '0';
+                gift.style.zIndex = '20';
+                gift.style.animation = 'giftPulse 2.5s ease-in-out infinite';
+                giftOriginalParent.appendChild(gift);
+            }
+            dropZone.classList.remove('hover');
+        }, { passive: false });
+
+        // HTML5 Drag API fallback
+        gift.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', 'gift');
+        });
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('hover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('hover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('hover');
+            openPage2();
+        });
+
+        // =============================================
+        // 4. TRANSITION TO PAGE 2
+        // =============================================
+        function openPage2() {
+            gift.style.transition = 'all 0.3s ease';
+            gift.style.position = 'relative';
+            gift.style.left = '0';
+            gift.style.top = '0';
+            gift.style.zIndex = '20';
+            gift.style.cursor = 'grab';
+            gift.style.animation = 'giftPulse 2.5s ease-in-out infinite';
+            giftOriginalParent.appendChild(gift);
+
+            page1.classList.remove('active');
+            page1.classList.add('hidden');
+            page2.classList.remove('hidden');
+            page2.classList.add('active');
+        }
+
+        // =============================================
+        // 5. NEXT BUTTON — Celebration Overlay
+        // =============================================
+        document.getElementById('btnNext').addEventListener('click', () => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.88);
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                z-index: 9999; color: #fff; font-family: inherit;
+                animation: fadeIn 0.6s ease;
+                padding: 30px; text-align: center;
+            `;
+            overlay.innerHTML = `
+                <div style="font-size: 5rem; margin-bottom: 10px; animation: bounce 1s ease infinite;">🎉</div>
+                <h2 style="font-size: 2.2rem; background: linear-gradient(135deg, #ffd700, #ff8a5c);
+                    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+                    background-clip: text; font-weight: 800; letter-spacing: 2px; margin-bottom: 10px;">
+                    HAPPY BIRTHDAY ${FRIEND_NAME.toUpperCase()}!
+                </h2>
+                <p style="color: #e0d0f0; font-size: 1.1rem; line-height: 1.8; max-width: 420px;">
+                    🎂 Another year, another adventure! 🎈<br>
+                    May your day be as amazing as you are.<br>
+                    Cheers to you! 🥂
+                </p>
+                <div style="font-size: 3rem; margin: 12px 0; letter-spacing: 12px;">
+                    🎈 🎉 🎁 🎊 🥳
+                </div>
+                <button onclick="this.parentElement.remove()"
+                    style="margin-top: 20px; background: linear-gradient(135deg, #ff8a5c, #e06535);
+                    border: none; color: #fff; padding: 14px 44px; border-radius: 50px;
+                    font-size: 1rem; font-family: inherit; cursor: pointer;
+                    letter-spacing: 3px; font-weight: 600;
+                    box-shadow: 0 6px 25px rgba(255,138,92,0.3); transition: all 0.3s;">
+                    🎂 Thanks! 🎂
+                </button>
+            `;
+            document.body.appendChild(overlay);
+
+            if (!document.getElementById('bdayKeyframes')) {
+                const style = document.createElement('style');
+                style.id = 'bdayKeyframes';
+                style.textContent = `
+                    @keyframes fadeIn { from { opacity: 0; transform: scale(0.85); } to { opacity: 1; transform: scale(1); } }
+                    @keyframes bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+                `;
+                document.head.appendChild(style);
+            }
+        });
+    </script>
+
+</body>
+</html>
